@@ -2,32 +2,153 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pretty Little Reader Bookish Quiz</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pretty Little Reader QOTW</title>
 
 <style>
+
+html, body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   padding: 20px;
-  color: #ffffff;
+  color: #ffe6e6;
   font-family: 'Georgia', serif;
   overflow-x: hidden;
+  overflow-y: auto;
 
-  /* Dark romance animated background */
-  background: linear-gradient(270deg, #000000, #2b0000, #ffffff, #1a0000, #000000);
+  font-size: 18px; /* ADD THIS */
+
+  background: linear-gradient(270deg, #000000, #2b0000, #660000, #1a0000, #000000);
   background-size: 800% 800%;
-  animation: rippleBG 40s ease infinite; /* slowed down */
+  animation: rippleBG 35s ease infinite;
 }
 
-/* Background animation */
 @keyframes rippleBG {
   0% { background-position: 0% 50%; }
-  25% { background-position: 50% 100%; }
   50% { background-position: 100% 50%; }
-  75% { background-position: 50% 0%; }
   100% { background-position: 0% 50%; }
 }
 
+/* Smoke */
+body::before {
+  content: "";
+  position: fixed;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,0,0,0.08) 0%, transparent 70%);
+  animation: smokeMove 60s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes smokeMove {
+  0% { transform: translate(0,0) scale(1); }
+  50% { transform: translate(-10%, -10%) scale(1.2); }
+  100% { transform: translate(0,0) scale(1); }
+}
+
+/* Embers */
+.embers {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ember {
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  background: radial-gradient(circle at 30% 30%, #ff4d4d, #800000);
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  0% { transform: translateY(-10vh); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(110vh) translateX(40px); opacity: 0; }
+}
+
+/* Title */
+h1 {
+  text-align: center;
+  color: #ff4d4d;
+  text-shadow: 0 0 15px rgba(255,0,0,0.8);
+  font-size: clamp(22px, 6vw, 36px);
+}
+
+/* Container */
+.container {
+  max-width: 600px;
+  width: 95%; /* increase from 90% */
+  margin: 10px auto;
+  background: rgba(0,0,0,0.8);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 30px rgba(255,0,0,0.5);
+
+  width: 90%; /* ADD THIS */
+}
+
+/* Question */
+.question {
+  margin-bottom: 25px;
+  font-size: clamp(16px, 4.5vw, 20px);
+}
+
+/* Answers */
+.answers label {
+  display: block;
+  margin: 14px 0;
+  padding: 14px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  cursor: pointer;
+  color: #ffd6d6;
+  font-size: clamp(15px, 4vw, 18px);
+}
+
+/* Button */
+button {
+  background: #990000;
+  color: white;
+  border: none;
+  padding: 16px;
+  font-size: clamp(16px, 4.5vw, 18px);
+  cursor: pointer;
+  border-radius: 8px;
+  width: 100%;
+}
+
+button:hover {
+  background: #ff1a1a;
+}
+
+/* Popup base */
+#popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 120%;
+  height: 120%;
+  background: rgba(0,0,0,0.9);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+#popupBox, #nameBox {
+  width: 120%;
+  max-width: 500px;
+  padding: 25px;
+  font-size: clamp(16px, 4.5vw, 20px);
+}
+
+/* Name popup */
 #nameOverlay {
   position: fixed;
   top: 0;
@@ -48,9 +169,16 @@ body {
   font-size: clamp(16px, 4.5vw, 20px);
 }
 
-#nameInput {
+#popupBox, #nameBox {
   width: 100%;
-  padding: 14px;
+  max-width: 500px;
+  padding: 25px;
+  font-size: clamp(16px, 4.5vw, 20px);
+}
+
+#nameInput {
+  width: 120%;
+  padding: 12px;
   margin-top: 15px;
   border-radius: 6px;
   border: none;
@@ -59,157 +187,40 @@ body {
   font-size: 16px;
 }
 
-/* Smoke layer */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
-  animation: smokeMove 60s linear infinite;
-  pointer-events: none;
-}
-
-/* Smoke animation */
-@keyframes smokeMove {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-10%, -10%) scale(1.2); }
-  100% { transform: translate(0, 0) scale(1); }
-}
-
-/* Petal container */
-.embers {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-/* Modal overlay */
-#nameOverlay, #popupOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.9);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-/* Modal box */
-#popupBox, #nameBox {
-  width: 120%;
-  max-width: 500px;
-  padding: 25px;
-  font-size: clamp(16px, 4.5vw, 20px);
-}
-
-/* Blur background when active */
 .blur {
-  filter: blur(8px);
-  pointer-events: none;
+  filter: blur(6px);
 }
 
-/* Rose petal particles */
-.ember {
-  position: absolute;
-  width: 10px;
-  height: 14px;
-  background: radial-gradient(circle at 30% 30%, #ff4d6d, #b3003c);
-  border-radius: 60% 60% 60% 60%;
-  transform: rotate(45deg);
-  opacity: 0.8;
-  animation: fall linear infinite;
-}
-
-/* Falling animation */
-@keyframes fall {
-  0% {
-    transform: translateY(-10vh) translateX(0) rotate(0deg);
-    opacity: 0;
+  .question {
+    font-size: 18px; /* bigger question text */
   }
-  10% { opacity: 1; }
-  100% {
-    transform: translateY(110vh) translateX(50px) rotate(360deg);
-    opacity: 0;
+
+  .answers label {
+    font-size: 17px; /* bigger answers */
   }
-}
 
-h1 {
-  text-align: center;
-  color: #ff4d4d;
-  letter-spacing: 1px;
-  text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
-  font-size: clamp(22px, 6vw, 36px);
-}
+  .container {
+    padding: 18px;
+  }
 
-.container {
-  max-width: 700px;
-  margin: auto;
-  background: rgba(0, 0, 0, 0.75);
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 25px rgba(120, 0, 0, 0.6);
-
-  width: 95%;
-}
-
-.question {
-  margin-bottom: 30px;
-  font-size: clamp(16px, 4.5vw, 20px);
-}
-
-.answers label {
-  display: block;
-  margin: 12px 0;
-  padding: 14px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.08);
-  cursor: pointer;
-  font-size: clamp(15px, 4vw, 18px);
-}
-
-button {
-  background: #8b0000;
-  color: white;
-  border: none;
-  padding: 14px;
-  font-size: clamp(16px, 4.5vw, 18px);
-  cursor: pointer;
-  border-radius: 8px;
-  width: 100%;
-}
-
-button:hover {
-  background: #ff1a1a;
-}
-
-#result {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 18px;
-  color: #ffffff;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+  button {
+    font-size: 17px;
+    padding: 16px;
+  }
 }
 </style>
 </head>
 
-<div id="popupOverlay">
-  <div id="popupBox">
-    <div id="popupResult"></div>
-    <br>
-  </div>
-</div>
-
 <body>
+
+<div class="embers" id="embers"></div>
+
+<h1 id="title">📚 Pretty Little Readers QOTW 📚</h1>
+
+<div class="container" id="mainContent">
+  <form id="quizForm"></form>
+  <button onclick="submitQuiz()">Submit Answer</button>
+</div>
 
 <!-- NAME POPUP -->
 <div id="nameOverlay">
@@ -221,33 +232,18 @@ button:hover {
   </div>
 </div>
 
-<!-- Petals -->
-<div class="embers" id="embers"></div>
-
-<h1>📚Pretty Little Readers QOTW📚</h1>
-
-<div class="container">
-  <form id="quizForm"></form>
-  <button onclick="submitQuiz()">Submit Quiz</button>
-  <div id="result"></div>
+<!-- RESULT POPUP -->
+<div id="popupOverlay">
+  <div id="popupBox">
+    <div id="popupResult"></div>
+  </div>
 </div>
 
 <script>
 
 let userName = "";
 
-function saveName() {
-  let input = document.getElementById("nameInput").value.trim();
-
-  if (input === "") {
-    alert("Enter your name 🔥");
-    return;
-  }
-
-  userName = input;
-  document.getElementById("nameOverlay").style.display = "none";
-}
-
+// Questions
 const questionBank = [
 {question:"What is a 'book hangover'?",answers:[
 {text:"Reading too fast",correct:false},
@@ -1648,140 +1644,113 @@ const questionBank = [
 {text:"Lead",correct:false}]}
 ];
 
-// Shuffle
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
+// Week logic
+function getWeekNumberMonday() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
 
-let selectedQuestions = [];
+  const day = now.getDay();
+  const diffToMonday = (day === 0 ? -6 : 1 - day);
+
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+
+  const startMonday = new Date(2024, 0, 1); // anchor Monday
+
+  const diffWeeks = Math.floor(
+    (monday - startMonday) / (7 * 24 * 60 * 60 * 1000)
+  );
+
+  return diffWeeks;
+}
 
 function generateQuiz() {
-  let form = document.getElementById("quizForm");
+  const form = document.getElementById("quizForm");
   form.innerHTML = "";
 
-let shuffled = [...questionBank];
-shuffle(shuffled);
-selectedQuestions = shuffled.slice(0, 10);
+  const week = getWeekNumberMonday();
+  const index = week % questionBank.length;
 
-  selectedQuestions.forEach((q, index) => {
-    let div = document.createElement("div");
-    div.classList.add("question");
+  let q = questionBank[index];
 
-    let html = `<p><b>Q${index + 1}:</b> ${q.question}</p>`;
-    html += `<div class="answers">`;
+  let div = document.createElement("div");
+  div.classList.add("question");
 
-    q.answers.forEach((a, i) => {
-  html += `
-    <label>
-      <input type="radio" name="q${index}" value="${i}">
-      ${a.text}
-    </label>
-  `;
-});
+  let html = `<p><b>BOTW:</b> ${q.question}</p><div class="answers">`;
 
-    html += `</div>`;
-
-    div.innerHTML = html;
-    form.appendChild(div);
+  q.answers.forEach((a) => {
+    html += `
+      <label>
+        <input type="radio" name="q0" value="${a.score}">
+        ${a.text}
+      </label>
+    `;
   });
+
+  html += `</div>`;
+  div.innerHTML = html;
+  form.appendChild(div);
 }
+
+// Save name from popup
+function saveName() {
+  let input = document.getElementById("nameInput").value.trim();
+
+  if (input === "") {
+    alert("Enter your name 🔥");
+    return;
+  }
+
+  userName = input;
+  document.getElementById("nameOverlay").style.display = "none";
+}
+
+// Submit
 function submitQuiz() {
-  let score = 0;
-  let reviewHTML = "";
+  let selected = document.querySelector(`input[name="q0"]:checked`);
+  let score = selected ? parseInt(selected.value) : 0;
 
-  selectedQuestions.forEach((q, index) => {
-    let selected = document.querySelector(`input[name="q${index}"]:checked`);
+  // Get current question again
+  const week = getWeekNumberMonday();
+  const index = week % questionBank.length;
+  let q = questionBank[index];
 
-    let correctAnswer = q.answers.find(a => a.correct);
-    let correctText = correctAnswer.text;
-
-    if (selected) {
-      let userAnswer = q.answers[selected.value];
-
-      if (userAnswer.correct) {
-        score++;
-      } else {
-        reviewHTML += `
-          <p style="color:#ff4d4d;">
-            ❌ <b>${q.question}</b><br>
-            Your answer: ${userAnswer.text}<br>
-            ✅ Correct answer: ${correctText}
-          </p>
-        `;
-      }
-    } else {
-      reviewHTML += `
-        <p style="color:#ffcc00;">
-          ⚠️ <b>${q.question}</b><br>
-          You didn’t answer this.<br>
-          ✅ Correct answer: ${correctText}
-        </p>
-      `;
-    }
-  });
+  // Find correct answer
+  let correctAnswer = q.answers.find(a => a.score === 1).text;
 
   let result = "";
 
-  if (score <= 3) result = "📖 Beginner Reader";
-  else if (score <= 6) result = "📚 Casual Bookworm";
-  else if (score <= 8) result = "🔥 Avid Reader";
-  else result = "👑 Bookish Expert";
+  if (score === 1) {
+    result = `👑 ${userName}, you got it right — Welcome to the Bookish Elite...this week..`;
+  } else {
+    result = `
+      💔 ${userName}, awesome try, but not quite…<br><br>
+      📖 <b>Correct Answer:</b> ${correctAnswer}
+    `;
+  }
 
-  let finalText = `
-    👤 ${userName}<br><br>
-    You got ${score}/10 correct!<br><br>
-    ${result}
-    <hr>
-    <h3>Review:</h3>
-    ${reviewHTML || "Perfect score! 🔥"}
-  `;
-
-  document.getElementById("popupResult").innerHTML = finalText;
+  document.getElementById("popupResult").innerHTML = result;
   document.getElementById("popupOverlay").style.display = "flex";
 
-  document.querySelector(".container").classList.add("blur");
-  document.querySelector("h1").classList.add("blur");
+  document.getElementById("mainContent").classList.add("blur");
+  document.getElementById("title").classList.add("blur");
 }
 
-/* Generate petals */
+// Embers
 function createEmbers() {
   const container = document.getElementById("embers");
 
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 30; i++) {
     let ember = document.createElement("div");
     ember.classList.add("ember");
 
     ember.style.left = Math.random() * 100 + "vw";
-    ember.style.animationDuration = (8 + Math.random() * 12) + "s"; // slower fall
-    ember.style.opacity = Math.random();
+    ember.style.animationDuration = (6 + Math.random() * 10) + "s";
 
     container.appendChild(ember);
   }
 }
 
-function getWeekNumberThursday() {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-
-  const day = now.getDay(); // 0 = Sunday, 4 = Thursday
-
-  // Shift so Thursday becomes the "start"
-  const diff = (day - 4 + 7) % 7;
-
-  const thursday = new Date(now);
-  thursday.setDate(now.getDate() - diff);
-
-  const anchor = new Date(2024, 0, 4); // a known Thursday
-
-  const weekNumber = Math.floor(
-    (thursday - anchor) / (7 * 24 * 60 * 60 * 1000)
-  );
-
-  return weekNumber;
-}
 generateQuiz();
 createEmbers();
 

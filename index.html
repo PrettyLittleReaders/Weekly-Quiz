@@ -31,8 +31,8 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 120%;
-  height: 120%;
+  width: 100%;
+  height: 100%;
   background: rgba(0,0,0,0.95);
   display: flex;
   justify-content: center;
@@ -49,7 +49,7 @@ body {
 }
 
 #nameInput {
-  width: 120%;
+  width: 100%;
   padding: 12px;
   margin-top: 15px;
   border-radius: 6px;
@@ -94,8 +94,8 @@ body::before {
   position: fixed;
   top: 0;
   left: 0;
-  width: 120%;
-  height: 120%;
+  width: 100%;
+  height: 100%;
   background: rgba(0,0,0,0.85);
   display: none;
   justify-content: center;
@@ -1663,19 +1663,19 @@ selectedQuestions = shuffled.slice(0, 10);
     let div = document.createElement("div");
     div.classList.add("question");
 
-    let html = <p><b>Q${index + 1}:</b> ${q.question}</p>;
-    html += <div class="answers">;
+    let html = `<p><b>Q${index + 1}:</b> ${q.question}</p>`;
+    html += `<div class="answers">`;
 
     q.answers.forEach((a, i) => {
-  html += 
+  html += `
     <label>
       <input type="radio" name="q${index}" value="${i}">
       ${a.text}
     </label>
-  ;
+  `;
 });
 
-    html += </div>;
+    html += `</div>`;
 
     div.innerHTML = html;
     form.appendChild(div);
@@ -1686,7 +1686,7 @@ function submitQuiz() {
   let reviewHTML = "";
 
   selectedQuestions.forEach((q, index) => {
-    let selected = document.querySelector(input[name="q${index}"]:checked);
+    let selected = document.querySelector(`input[name="q${index}"]:checked`);
 
     let correctAnswer = q.answers.find(a => a.correct);
     let correctText = correctAnswer.text;
@@ -1697,22 +1697,22 @@ function submitQuiz() {
       if (userAnswer.correct) {
         score++;
       } else {
-        reviewHTML += 
+        reviewHTML += `
           <p style="color:#ff4d4d;">
             ❌ <b>${q.question}</b><br>
             Your answer: ${userAnswer.text}<br>
             ✅ Correct answer: ${correctText}
           </p>
-        ;
+        `;
       }
     } else {
-      reviewHTML += 
+      reviewHTML += `
         <p style="color:#ffcc00;">
           ⚠️ <b>${q.question}</b><br>
           You didn’t answer this.<br>
           ✅ Correct answer: ${correctText}
         </p>
-      ;
+      `;
     }
   });
 
@@ -1723,14 +1723,14 @@ function submitQuiz() {
   else if (score <= 8) result = "🔥 Avid Reader";
   else result = "👑 Bookish Expert";
 
-  let finalText = 
+  let finalText = `
     👤 ${userName}<br><br>
     You got ${score}/10 correct!<br><br>
     ${result}
     <hr>
     <h3>Review:</h3>
     ${reviewHTML || "Perfect score! 🔥"}
-  ;
+  `;
 
   document.getElementById("popupResult").innerHTML = finalText;
   document.getElementById("popupOverlay").style.display = "flex";

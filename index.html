@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pretty Little Reader Bookish Quiz</title>
+
+<style>
+body {
+  margin: 0;
+  padding: 20px;
+  color: #ffffff;
+  font-family: 'Georgia', serif;
+  overflow-x: hidden;
+
+  /* Dark romance animated background */
+  background: linear-gradient(270deg, #000000, #2b0000, #ffffff, #1a0000, #000000);
+  background-size: 800% 800%;
+  animation: rippleBG 40s ease infinite; /* slowed down */
+}
+
+/* Background animation */
+@keyframes rippleBG {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 50% 100%; }
+  50% { background-position: 100% 50%; }
+  75% { background-position: 50% 0%; }
+  100% { background-position: 0% 50%; }
+}
+
+#nameOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+#nameBox {
+  background: #1a0000;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 0 25px rgba(255,0,0,0.7);
+}
+
+#nameInput {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  border-radius: 6px;
+  border: none;
+  background: #330000;
+  color: #fff;
+}
+
+/* Smoke layer */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+  animation: smokeMove 60s linear infinite;
+  pointer-events: none;
+}
+
+/* Smoke animation */
+@keyframes smokeMove {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-10%, -10%) scale(1.2); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* Petal container */
+.embers {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Modal overlay */
+#popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* Modal box */
+#popupBox {
+  background: #000;
+  padding: 30px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255,0,0,0.7);
+}
+
+/* Blur background when active */
+.blur {
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+/* Rose petal particles */
+.ember {
+  position: absolute;
+  width: 10px;
+  height: 14px;
+  background: radial-gradient(circle at 30% 30%, #ff4d6d, #b3003c);
+  border-radius: 60% 60% 60% 60%;
+  transform: rotate(45deg);
+  opacity: 0.8;
+  animation: fall linear infinite;
+}
+
+/* Falling animation */
+@keyframes fall {
+  0% {
+    transform: translateY(-10vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% { opacity: 1; }
+  100% {
+    transform: translateY(110vh) translateX(50px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+h1 {
+  text-align: center;
+  color: #ff4d4d;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 25px rgba(120, 0, 0, 0.6);
+}
+
+.question {
+  margin-bottom: 40px;
+}
+
+.answers label {
+  display: block;
+  margin: 8px 0;
+  padding-left: 20px;
+  cursor: pointer;
+  color: #f5f5f5;
+}
+
+button {
+  background: #8b0000;
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  background: #ff1a1a;
+}
+
+#result {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 18px;
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+</style>
+</head>
+
+<div id="popupOverlay">
+  <div id="popupBox">
+    <div id="popupResult"></div>
+    <br>
+  </div>
+</div>
+
+<body>
+
+<!-- NAME POPUP -->
+<div id="nameOverlay">
+  <div id="nameBox">
+    <h2>Enter Your Name</h2>
+    <input type="text" id="nameInput" placeholder="Your name...">
+    <br><br>
+    <button onclick="saveName()">Start</button>
+  </div>
+</div>
+
+<!-- Petals -->
+<div class="embers" id="embers"></div>
+
+<h1>📚Pretty Little Readers QOTW📚</h1>
+
+<div class="container">
+  <form id="quizForm"></form>
+  <button onclick="submitQuiz()">Submit Quiz</button>
+  <div id="result"></div>
+</div>
+
+<script>
+
+let userName = "";
+
+function saveName() {
+  let input = document.getElementById("nameInput").value.trim();
+
+  if (input === "") {
+    alert("Enter your name 🔥");
+    return;
+  }
+
+  userName = input;
+  document.getElementById("nameOverlay").style.display = "none";
+}
+
+const questionBank = [
+{question:"What is a 'book hangover'?",answers:[
+{text:"Reading too fast",correct:false},
+{text:"Emotional aftermath",correct:true},
+{text:"Buying books",correct:false},
+{text:"Writing",correct:false}]},
+
+{question:"Why did the reader stay up all night?",answers:[
+{text:"They had work to do",correct:false},
+{text:"They said one more chapter",correct:true},
+{text:"They couldn't sleep",correct:false},
+{text:"They were studying",correct:false}]},
+
+{question:"In ACOTAR, what is Feyre turned into?",answers:[
+{text:"Witch",correct:false},
+{text:"High Fae",correct:true},
+{text:"Goddess",correct:false},
+{text:"Queen",correct:false}]},
+
+{question:"What is a reader's biggest fear?",answers:[
+{text:"Unfinished series",correct:false},
+{text:"When the last book is only in hardcover",correct:false},
+{text:"Favorite character dying",correct:true},
+{text:"A long book",correct:false}]},
+
+{question:"In Once Upon a Broken Heart, what is Jacks known as?",answers:[
+{text:"King",correct:false},
+{text:"Fate",correct:true},
+{text:"Warrior",correct:false},
+{text:"Prince",correct:false}]},
+
+{question:"Why do readers love the villain?",answers:[
+{text:"They are kind",correct:false},
+{text:"They have personality",correct:true},
+{text:"They are relatable",correct:false},
+{text:"They need therapy",correct:false}]},
+
+{question:"What is worldbuilding?",answers:[
+{text:"Writing dialogue",correct:false},
+{text:"Editing",correct:false},
+{text:"Creating settings and universe",correct:true},
+{text:"Publishing",correct:false}]},
+
+{question:"Why do readers buy more books?",answers:[
+{text:"They need them",correct:false},
+{text:"They read really fast",correct:false},
+{text:"Decoration",correct:false},
+{text:"Emotional Support",correct:true}]},
+
+{question:"In Twisted Love, what defines Alex Volkov?",answers:[
+{text:"Carefree",correct:false},
+{text:"Cold and calculated",correct:true},
+{text:"Comic",correct:false},
+{text:"Weak",correct:false}]},
+
+{question:"What is a readers toxic trait?",answers:[
+{text:"Reading slow",correct:false},
+{text:"Buying books they won't read",correct:true},
+{text:"Finishing books too fast",correct:false},
+{text:"Taking notes",correct:false}]},
+
+{question:"What happens when a reader finds a new favorite book?",answers:[
+{text:"It becomes their personality",correct:true},
+{text:"They move on to the next",correct:false},
+{text:"They forget it",correct:false},
+{text:"The reread it",correct:false}]},
+
+{question:"In Icebreaker, what sport does the male lead play?",answers:[
+{text:"Football",correct:false},
+{text:"Soccer",correct:false},
+{text:"Hockey",correct:true},
+{text:"Basketball",correct:false}]},
+
+{question:"Why do readers love long books?",answers:[
+{text:"They are easy",correct:false},
+{text:"They last longer",correct:false},
+{text:"More time to suffer",correct:false},
+{text:"Both B and C",correct:true}]},
+
+{question:"In Shatter Me, what is Juliette's power?",answers:[
+{text:"Mind reading",correct:false},
+{text:"Deadly touch",correct:true},
+{text:"Healing touch",correct:false},
+{text:"Controls fire",correct:false}]},
+
+{question:"Why do readers recommend books?",answers:[
+{text:"To help others",correct:false},
+{text:"To share trauma",correct:true},
+{text:"To share knowledge",correct:false},
+{text:"For fun",correct:false}]},
+
+{question:"In The Love Hypothesis, what is the fake dating setup used for?",answers:[
+{text:"Money",correct:false},
+{text:"Academic",correct:true},
+{text:"Revenge",correct:false},
+{text:"Family",correct:false}]},
+
+{question:"What happens when you start a series?",answers:[
+{text:"You read one book",correct:false},
+{text:"You stop easily",correct:false},
+{text:"You lose your life",correct:true},
+{text:"You read half",correct:false}]},
+
+{question:"What is a readers greatest enemy?",answers:[
+{text:"Plot holes",correct:false},
+{text:"Bad writing",correct:false},
+{text:"Work/School",correct:true},
+{text:"Long books",correct:false}]},
+
+{question:"What is the most dangerous type of character?",answers:[
+{text:"Villain",correct:false},
+{text:"Hero",correct:false},
+{text:"The one you love most",correct:true},
+{text:"Funny side character",correct:false}]},
+
+{question:"What is the Suriel known for in ACOTAR?",answers:[
+{text:"Fighting",correct:false},
+{text:"Healing",correct:false},
+{text:"Tea",correct:true},
+{text:"Spying",correct:false}]},
+
+{question:"In the Cruel Prince, what is Jude's biggest disadvantage?",answers:[
+{text:"Lack of magic",correct:true},
+{text:"Weak fighter",correct:false},
+{text:"Poor intelligence",correct:false},
+{text:"No allies",correct:false}]},
+
+{question:"What is the setting of a story?",answers:[
+{text:"Characters",correct:false},
+{text:"Time & place",correct:true},
+{text:"Conflict",correct:false},
+{text:"Ending",correct:false}]},
+
+{question:"In From Blood and Ash, what is Poppy originally believed to be?",answers:[
+{text:"Queen",correct:false},
+{text:"Maiden",correct:true},
+{text:"Assassin",correct:false},
+{text:"Warrior",correct:false}]},
+
+{question:"What is a mistaken identity trope?",answers:[
+{text:"Open identity",correct:false},
+{text:"Hidden identity",correct:true},
+{text:"No identity",correct:false},
+{text:"Comedy",correct:false}]},
+
+{question:"In Powerless, what makes the main character unique?",answers:[
+{text:"Strongest powers",correct:false},
+{text:"No powers",correct:true},
+{text:"Royal status",correct:false},
+{text:"Wealth",correct:false}]},
+
+{question:"What is the biggest lie in reading?",answers:[
+{text:"This book is short",correct:false},
+{text:"I won't cry",correct:false},
+{text:"I'll go to bed early",correct:false},
+{text:"All of the above",correct:true}]},
+
+{question:"What is the true definition of I'll just check one spoiler?",answers:[
+{text:"Falling into a full spoiler spiral",correct:true},
+{text:"Staying disciplined",correct:false},
+{text:"Reading one line",correct:false},
+{text:"Closing the book",correct:false}]},
+
+{question:"What is a power imbalance trope?",answers:[
+{text:"Equal strength",correct:false},
+{text:"One character has more power",correct:true},
+{text:"No conflict",correct:false},
+{text:"Fast romance",correct:false}]},
+
+{question:"In dark romance, what defines a morally black character?",answers:[
+{text:"Slightly flawed",correct:false},
+{text:"Ethical",correct:false},
+{text:"Embraces immoral actions",correct:true},
+{text:"Comic relief",correct:false}]},
+
+{question:"What is the reader equivalent of dramatic irony?",answers:[
+{text:"Knowing spoilers",correct:true},
+{text:"Forgetting names",correct:false},
+{text:"Trusting the author",correct:false},
+{text:"Skipping chapters",correct:false}]},
+
+{question:"What is the trope called when a reader falls in love with a villain?",answers:[
+{text:"Poor judgement arc",correct:true},
+{text:"Redemption arc",correct:false},
+{text:"Enemies to lovers",correct:false},
+{text:"Character analysis",correct:false}]},
+
+{question:"What is found family?",answers:[
+{text:"Relatives",correct:false},
+{text:"Rivals",correct:false},
+{text:"Enemies",correct:false},
+{text:"Chosen",correct:true}]},
+
+{question:"What is the literary term for rereading the same paragraph because your brain stopped working?",answers:[
+{text:"Deep analysis",correct:false},
+{text:"Cognitive buffering",correct:true},
+{text:"Reader malfunction",correct:false},
+{text:"Symbolism",correct:false}]},
+
+{question:"In All for the Game, what is Andrew Minyard most known for?",answers:[
+{text:"Leadership",correct:false},
+{text:"Coaching",correct:true},
+{text:"Scoring abilities",correct:false},
+{text:"Being Goalkeeper",correct:false}]},
+
+{question:"What is a reader's fatal flaw?",answers:[
+{text:"Not reading enough",correct:false},
+{text:"Skipping chapters",correct:false},
+{text:"Reading slow",correct:false},
+{text:"Getting attached to side characters",correct:true}]},
+
+{question:"What is the most dangerous narrative device?",answers:[
+{text:"Flashbacks",correct:false},
+{text:"Cliffhanger",correct:false},
+{text:"To be continued...",correct:true},
+{text:"Duel POV",correct:false}]},
+
+{question:"What is a twist villain?",answers:[
+{text:"Known villain",correct:false},
+{text:"Side character",correct:false},
+{text:"Hero gone bad",correct:false},
+{text:"Unexpected villain",correct:true}]},
+
+{question:"What trope best describes buying books instead of reading the ones you already own?",answers:[
+{text:"Enemies to lovers",correct:false},
+{text:"Tragic flaw",correct:false},
+{text:"Consumerism arc",correct:true},
+{text:"Plot twist",correct:false}]},
+
+{question:"In Fourth Wing, what determines a rider's power?",answers:[
+{text:"Age",correct:false},
+{text:"Rank",correct:true},
+{text:"Weapon",correct:false},
+{text:"Dragon",correct:true}]},
+
+{question:"In Haunting Adeline, what is Zade Meadows' primary role?",answers:[
+{text:"Police officer",correct:false},
+{text:"Hacker",correct:true},
+{text:"Lawyer",correct:false},
+{text:"Journalist",correct:false}]},
+
+{question:"What literary device is being used when a reader says they'll sleep early but start a new book at 11PM?",answers:[
+{text:"Forshadowing",correct:false},
+{text:"Irony",correct:true},
+{text:"Allegory",correct:false},
+{text:"Symbolism",correct:false}]},
+
+{question:"In All for the Game, what position does Neil Josten play?",answers:[
+{text:"Goalkeepert",correct:false},
+{text:"Backliner",correct:true},
+{text:"Dealer",correct:false},
+{text:"Striker",correct:false}]},
+
+{question:"What is the meaning of just one more chapter?",answers:[
+{text:"Stopping when tired",correct:false},
+{text:"Reading one chapter",correct:false},
+{text:"Skimming the ending",correct:false},
+{text:"Accidentally reading 200 more pages",correct:true}]},
+
+{question:"What is a HEA?",answers:[
+{text:"Happy ever after",correct:true},
+{text:"High energy action",correct:false},
+{text:"Hero ending arc",correct:false},
+{text:"Happy even after",correct:false}]},
+
+{question:"What does HFN mean?",answers:[
+{text:"Hard final novel",correct:false},
+{text:"Happy for now",correct:true},
+{text:"Happy for never",correct:false},
+{text:"Hidden fate narrative",correct:false}]},
+
+{question:"What genre is most popular on BookTok?",answers:[
+{text:"Thriller",correct:false},
+{text:"Historical Fiction",correct:false},
+{text:"Fantasy",correct:false},
+{text:"Romance",correct:true}]},
+
+{question:"What type of dragon does Voilet bond with in Fourth Wing?",answers:[
+{text:"Red",correct:false},
+{text:"Black",correct:true},
+{text:"Blue",correct:false},
+{text:"Golden",correct:false}]},
+
+{question:"What is a reading slump?",answers:[
+{text:"Reading fast",correct:false},
+{text:"Finished a book",correct:false},
+{text:"No motivation",correct:true},
+{text:"Buying more books",correct:false}]},
+
+{question:"What trope means only one bed?",answers:[
+{text:"Mystery",correct:false},
+{text:"Force proximity",correct:true},
+{text:"Revenge",correct:false},
+{text:"Love triangle",correct:false}]},
+
+{question:"What trope means only one bed?",answers:[
+{text:"Mystery",correct:false},
+{text:"Force proximity",correct:true},
+{text:"Revenge",correct:false},
+{text:"Love triangle",correct:false}]},
+
+{question:"Which character is most likely to say I work alone and then immediately not?",answers:[
+{text:"Lone wolf detective",correct:true},
+{text:"Comic relief sidekick",correct:false},
+{text:"Wise mentor",correct:false},
+{text:"Background extra",correct:false}]},
+
+{question:"What is the real reason villains explain their entire plan?",answers:[
+{text:"Professional courtesy",correct:false},
+{text:"They love feedback",correct:false},
+{text:"Plot convenience",correct:true},
+{text:"Legal requirement",correct:false}]},
+
+{question:"Which genre is most likely to emotionally destroy you for fun?",answers:[
+{text:"Romance",correct:false},
+{text:"Fantasy",correct:false},
+{text:"Literary fiction",correct:true},
+{text:"Self-help",correct:false}]},
+
+{question:"What does slow burn romance actually mean?",answers:[
+{text:"They forget to fall in love",correct:false},
+{text:"It takes 400 pages to hold hands",correct:true},
+{text:"They argue constantly",correct:false},
+{text:"Someone is literally on fire",correct:false}]},
+
+{question:"Which character would absolutely ignore obvious danger signs?",answers:[
+{text:"Final girl",correct:false},
+{text:"Curious protagonist",correct:true},
+{text:"Retired hero",correct:false},
+{text:"Narrator",correct:false}]},
+
+{question:"What is the most overpowered literary ability?",answers:[
+{text:"Sword fighting",correct:false},
+{text:"Magic",correct:false},
+{text:"Plot armor",correct:true},
+{text:"Sarcasm",correct:false}]},
+
+{question:"Which setting guarantees something goes wrong?",answers:[
+{text:"A quiet village",correct:false},
+{text:"A magical school",correct:true},
+{text:"A library",correct:false},
+{text:"A bakery",correct:false}]},
+
+{question:"What’s the real job of the comic relief character?",answers:[
+{text:"Solve mysteries",correct:false},
+{text:"Lighten tension",correct:true},
+{text:"Lead battles",correct:false},
+{text:"Write the story",correct:false}]},
+
+{question:"Which trope screams this will end badly?",answers:[
+{text:"Enemies to lovers",correct:false},
+{text:"Forbidden love",correct:true},
+{text:"Found family",correct:false},
+{text:"Happy ending",correct:false}]},
+
+{question:"What does a prophecy usually guarantee?",answers:[
+{text:"Peace",correct:false},
+{text:"Confusion",correct:true},
+{text:"Accuracy",correct:false},
+{text:"Short story",correct:false}]},
+
+{question:"Which character is most likely to betray the group?",answers:[
+{text:"The loyal best friend",correct:false},
+{text:"The mysterious newcomer",correct:true},
+{text:"The pet",correct:false},
+{text:"The narrator",correct:false}]},
+
+{question:"Why do characters split up in horror books?",answers:[
+{text:"Efficiency",correct:false},
+{text:"Bravery",correct:false},
+{text:"Bad decisions",correct:true},
+{text:"Team building",correct:false}]},
+
+{question:"What does unreliable narrator mean?",answers:[
+{text:"They are late",correct:false},
+{text:"They lie or mislead",correct:true},
+{text:"They forget names",correct:false},
+{text:"They whisper",correct:false}]},
+
+{question:"Which book element is most likely to cause confusion?",answers:[
+{text:"Simple plot",correct:false},
+{text:"Time jumps",correct:true},
+{text:"Clear dialogue",correct:false},
+{text:"Short chapters",correct:false}]},
+
+{question:"What’s the main purpose of a cliffhanger?",answers:[
+{text:"End peacefully",correct:false},
+{text:"Create suspense",correct:true},
+{text:"Explain everything",correct:false},
+{text:"Introduce recipes",correct:false}]},
+
+{question:"Which character is most likely secretly royalty?",answers:[
+{text:"The orphan",correct:true},
+{text:"The king",correct:false},
+{text:"The villain",correct:false},
+{text:"The baker",correct:false}]},
+
+{question:"What does world-building involve?",answers:[
+{text:"Making maps",correct:false},
+{text:"Creating immersive settings",correct:true},
+{text:"Destroying cities",correct:false},
+{text:"Writing dialogue",correct:false}]},
+
+{question:"Which genre loves morally gray characters?",answers:[
+{text:"Fairy tales",correct:false},
+{text:"Dark fantasy",correct:true},
+{text:"Children’s books",correct:false},
+{text:"Cookbooks",correct:false}]},
+
+{question:"What is a common fantasy cliché?",answers:[
+{text:"Modern technology",correct:false},
+{text:"Chosen one",correct:true},
+{text:"Office jobs",correct:false},
+{text:"Taxes",correct:false}]},
+
+{question:"Which character usually dies first?",answers:[
+{text:"The hero",correct:false},
+{text:"The side character",correct:true},
+{text:"The villain",correct:false},
+{text:"The narrator",correct:false}]},
+
+{question:"What does breaking the fourth wall mean?",answers:[
+{text:"Destroying buildings",correct:false},
+{text:"Talking to the audience",correct:true},
+{text:"Ending the story",correct:false},
+{text:"Changing genres",correct:false}]},
+
+{question:"Which trope involves fake dating?",answers:[
+{text:"Enemies to lovers",correct:false},
+{text:"Fake relationship",correct:true},
+{text:"Time travel",correct:false},
+{text:"Revenge arc",correct:false}]},
+
+{question:"Why do mentors disappear?",answers:[
+{text:"Vacation",correct:false},
+{text:"To force growth",correct:true},
+{text:"Boredom",correct:false},
+{text:"New job",correct:false}]},
+
+{question:"What’s the most suspicious phrase in books?",answers:[
+{text:"Trust me",correct:true},
+{text:"Hello",correct:false},
+{text:"Good morning",correct:false},
+{text:"Thank you",correct:false}]},
+
+{question:"Which genre often has plot twists?",answers:[
+{text:"Mystery",correct:true},
+{text:"Poetry",correct:false},
+{text:"Cookbooks",correct:false},
+{text:"Manuals",correct:false}]},
+
+{question:"What does foreshadowing do?",answers:[
+{text:"Confuses readers",correct:false},
+{text:"Hints at future events",correct:true},
+{text:"Ends the story",correct:false},
+{text:"Adds jokes",correct:false}]},
+
+{question:"Which character is most dramatic?",answers:[
+{text:"Villain monologuing",correct:true},
+{text:"Silent hero",correct:false},
+{text:"Background guard",correct:false},
+{text:"Pet dog",correct:false}]},
+
+{question:"What’s the biggest lie in romance books?",answers:[
+{text:"Love is easy",correct:true},
+{text:"People meet",correct:false},
+{text:"They talk",correct:false},
+{text:"They eat",correct:false}]},
+
+{question:"Which trope involves enemies falling in love?",answers:[
+{text:"Friends to lovers",correct:false},
+{text:"Enemies to lovers",correct:true},
+{text:"Love triangle",correct:false},
+{text:"Second chance",correct:false}]},
+
+{question:"What is a red herring?",answers:[
+{text:"A fish",correct:false},
+{text:"A misleading clue",correct:true},
+{text:"A villain",correct:false},
+{text:"A narrator",correct:false}]},
+
+{question:"Which character is most likely hiding a secret?",answers:[
+{text:"Mysterious stranger",correct:true},
+{text:"Honest friend",correct:false},
+{text:"Comic relief",correct:false},
+{text:"Teacher",correct:false}]},
+
+{question:"What’s the point of a prologue?",answers:[
+{text:"Confuse readers",correct:false},
+{text:"Set up the story",correct:true},
+{text:"End the book",correct:false},
+{text:"Add filler",correct:false}]},
+
+{question:"Which setting screams danger?",answers:[
+{text:"Abandoned house",correct:true},
+{text:"Sunny park",correct:false},
+{text:"Library",correct:false},
+{text:"Cafe",correct:false}]},
+
+{question:"Why do villains have dramatic speeches?",answers:[
+{text:"Practice",correct:false},
+{text:"Ego",correct:true},
+{text:"Fear",correct:false},
+{text:"Kindness",correct:false}]},
+
+{question:"What does plot twist mean?",answers:[
+{text:"Straight story",correct:false},
+{text:"Unexpected turn",correct:true},
+{text:"Ending early",correct:false},
+{text:"Adding characters",correct:false}]},
+
+{question:"Which genre uses magic most?",answers:[
+{text:"Fantasy",correct:true},
+{text:"History",correct:false},
+{text:"Science",correct:false},
+{text:"Biography",correct:false}]},
+
+{question:"What’s a common hero flaw?",answers:[
+{text:"Too perfect",correct:false},
+{text:"Stubbornness",correct:true},
+{text:"Too kind",correct:false},
+{text:"Too quiet",correct:false}]},
+
+{question:"Which trope involves hidden identity?",answers:[
+{text:"Secret identity",correct:true},
+{text:"Love triangle",correct:false},
+{text:"Revenge",correct:false},
+{text:"Comedy",correct:false}]},
+
+{question:"What does rising action do?",answers:[
+{text:"Ends story",correct:false},
+{text:"Builds tension",correct:true},
+{text:"Introduces characters",correct:false},
+{text:"Adds jokes",correct:false}]},
+
+{question:"Which character is most likely comic relief?",answers:[
+{text:"Funny sidekick",correct:true},
+{text:"Villain",correct:false},
+{text:"Hero",correct:false},
+{text:"Mentor",correct:false}]},
+
+{question:"What is climax in a story?",answers:[
+{text:"Beginning",correct:false},
+{text:"Peak conflict",correct:true},
+{text:"Ending",correct:false},
+{text:"Title",correct:false}]},
+
+{question:"Which trope involves returning love?",answers:[
+{text:"Second chance romance",correct:true},
+{text:"Enemies to lovers",correct:false},
+{text:"Mystery",correct:false},
+{text:"Adventure",correct:false}]},
+
+{question:"What does denouement mean?",answers:[
+{text:"Start",correct:false},
+{text:"Resolution",correct:true},
+{text:"Conflict",correct:false},
+{text:"Plot twist",correct:false}]},
+
+{question:"Which character guides the hero?",answers:[
+{text:"Mentor",correct:true},
+{text:"Villain",correct:false},
+{text:"Stranger",correct:false},
+{text:"Extra",correct:false}]},
+
+{question:"What is satire?",answers:[
+{text:"Serious writing",correct:false},
+{text:"Humor to criticize",correct:true},
+{text:"Poetry",correct:false},
+{text:"Romance",correct:false}]},
+
+{question:"Which trope traps characters together?",answers:[
+{text:"Forced proximity",correct:true},
+{text:"Adventure",correct:false},
+{text:"Mystery",correct:false},
+{text:"Fantasy",correct:false}]},
+
+{question:"What’s the hero’s journey?",answers:[
+{text:"Random events",correct:false},
+{text:"Structured adventure arc",correct:true},
+{text:"Love story",correct:false},
+{text:"Comedy",correct:false}]},
+
+{question:"Which ending surprises readers?",answers:[
+{text:"Predictable",correct:false},
+{text:"Twist ending",correct:true},
+{text:"Happy ending",correct:false},
+{text:"Sad ending",correct:false}]},
+
+{question:"Who wrote '1984'?",answers:[
+{text:"Aldous Huxley",correct:false},
+{text:"George Orwell",correct:true},
+{text:"Ray Bradbury",correct:false},
+{text:"Jules Verne",correct:false}]},
+
+{question:"What house is Harry Potter sorted into?",answers:[
+{text:"Slytherin",correct:false},
+{text:"Ravenclaw",correct:false},
+{text:"Hufflepuff",correct:false},
+{text:"Gryffindor",correct:true}]},
+
+{question:"Who is Katniss Everdeen’s sister?",answers:[
+{text:"Rue",correct:false},
+{text:"Prim",correct:true},
+{text:"Clove",correct:false},
+{text:"Johanna",correct:false}]},
+
+{question:"Who wrote 'Pride and Prejudice'?",answers:[
+{text:"Emily Brontë",correct:false},
+{text:"Jane Austen",correct:true},
+{text:"Charlotte Brontë",correct:false},
+{text:"Mary Shelley",correct:false}]},
+
+{question:"What is Percy Jackson the son of?",answers:[
+{text:"Zeus",correct:false},
+{text:"Hades",correct:false},
+{text:"Poseidon",correct:true},
+{text:"Apollo",correct:false}]},
+
+{question:"Who is Sherlock Holmes’ sidekick?",answers:[
+{text:"Lestrade",correct:false},
+{text:"Watson",correct:true},
+{text:"Mycroft",correct:false},
+{text:"Moriarty",correct:false}]},
+
+{question:"Who wrote 'The Great Gatsby'?",answers:[
+{text:"F. Scott Fitzgerald",correct:true},
+{text:"Ernest Hemingway",correct:false},
+{text:"John Steinbeck",correct:false},
+{text:"Mark Twain",correct:false}]},
+
+{question:"What is the name of Bilbo’s sword?",answers:[
+{text:"Andúril",correct:false},
+{text:"Glamdring",correct:false},
+{text:"Sting",correct:true},
+{text:"Orcrist",correct:false}]},
+
+{question:"Who wrote 'To Kill a Mockingbird'?",answers:[
+{text:"Harper Lee",correct:true},
+{text:"Toni Morrison",correct:false},
+{text:"Mark Twain",correct:false},
+{text:"John Grisham",correct:false}]},
+
+{question:"What power does Eleven have in 'Stranger Things' novel adaptations?",answers:[
+{text:"Invisibility",correct:false},
+{text:"Telekinesis",correct:true},
+{text:"Flight",correct:false},
+{text:"Fire control",correct:false}]},
+
+{question:"Who is the author of 'The Hobbit'?",answers:[
+{text:"C.S. Lewis",correct:false},
+{text:"J.R.R. Tolkien",correct:true},
+{text:"George R.R. Martin",correct:false},
+{text:"Neil Gaiman",correct:false}]},
+
+{question:"What is Hermione Granger best known for?",answers:[
+{text:"Bravery",correct:false},
+{text:"Intelligence",correct:true},
+{text:"Strength",correct:false},
+{text:"Speed",correct:false}]},
+
+{question:"Who wrote 'The Catcher in the Rye'?",answers:[
+{text:"J.D. Salinger",correct:true},
+{text:"George Orwell",correct:false},
+{text:"Fitzgerald",correct:false},
+{text:"Steinbeck",correct:false}]},
+
+{question:"What creature is Smaug?",answers:[
+{text:"Elf",correct:false},
+{text:"Dragon",correct:true},
+{text:"Goblin",correct:false},
+{text:"Wizard",correct:false}]},
+
+{question:"Who is the villain in 'Peter Pan'?",answers:[
+{text:"Captain Hook",correct:true},
+{text:"Smee",correct:false},
+{text:"Pan",correct:false},
+{text:"Tiger Lily",correct:false}]},
+
+{question:"Who wrote 'The Chronicles of Narnia'?",answers:[
+{text:"J.R.R. Tolkien",correct:false},
+{text:"C.S. Lewis",correct:true},
+{text:"Roald Dahl",correct:false},
+{text:"Philip Pullman",correct:false}]},
+
+{question:"What is the name of Frodo’s loyal friend?",answers:[
+{text:"Pippin",correct:false},
+{text:"Merry",correct:false},
+{text:"Samwise",correct:true},
+{text:"Boromir",correct:false}]},
+
+{question:"Who wrote 'Frankenstein'?",answers:[
+{text:"Mary Shelley",correct:true},
+{text:"Bram Stoker",correct:false},
+{text:"Edgar Allan Poe",correct:false},
+{text:"H.G. Wells",correct:false}]},
+
+{question:"What is Dracula?",answers:[
+{text:"Werewolf",correct:false},
+{text:"Vampire",correct:true},
+{text:"Ghost",correct:false},
+{text:"Demon",correct:false}]},
+
+{question:"Who wrote 'The Hunger Games'?",answers:[
+{text:"Veronica Roth",correct:false},
+{text:"Suzanne Collins",correct:true},
+{text:"Stephen King",correct:false},
+{text:"Rick Riordan",correct:false}]},
+
+{question:"What is Tris Prior’s faction?",answers:[
+{text:"Erudite",correct:false},
+{text:"Dauntless",correct:true},
+{text:"Amity",correct:false},
+{text:"Candor",correct:false}]},
+
+{question:"Who wrote 'Divergent'?",answers:[
+{text:"Suzanne Collins",correct:false},
+{text:"Veronica Roth",correct:true},
+{text:"Marie Lu",correct:false},
+{text:"Cassandra Clare",correct:false}]},
+
+{question:"Who is the main villain in 'The Lion, the Witch and the Wardrobe'?",answers:[
+{text:"White Witch",correct:true},
+{text:"Aslan",correct:false},
+{text:"Mr. Tumnus",correct:false},
+{text:"Edmund",correct:false}]},
+
+{question:"Who wrote 'The Fault in Our Stars'?",answers:[
+{text:"John Green",correct:true},
+{text:"Rainbow Rowell",correct:false},
+{text:"Nicholas Sparks",correct:false},
+{text:"Sarah Dessen",correct:false}]},
+
+{question:"What illness does Hazel have?",answers:[
+{text:"Cancer",correct:true},
+{text:"Asthma",correct:false},
+{text:"Diabetes",correct:false},
+{text:"Heart disease",correct:false}]},
+
+{question:"Who wrote 'Twilight'?",answers:[
+{text:"Stephen King",correct:false},
+{text:"Stephenie Meyer",correct:true},
+{text:"L.J. Smith",correct:false},
+{text:"Richelle Mead",correct:false}]},
+
+{question:"What is Edward Cullen?",answers:[
+{text:"Werewolf",correct:false},
+{text:"Vampire",correct:true},
+{text:"Human",correct:false},
+{text:"Wizard",correct:false}]},
+
+{question:"Who is Percy Jackson’s best friend?",answers:[
+{text:"Luke",correct:false},
+{text:"Grover",correct:true},
+{text:"Tyson",correct:false},
+{text:"Clarisse",correct:false}]},
+
+{question:"Who wrote 'The Maze Runner'?",answers:[
+{text:"James Dashner",correct:true},
+{text:"Rick Riordan",correct:false},
+{text:"Suzanne Collins",correct:false},
+{text:"Marie Lu",correct:false}]},
+
+{question:"What is the maze full of?",answers:[
+{text:"Zombies",correct:false},
+{text:"Grievers",correct:true},
+{text:"Dragons",correct:false},
+{text:"Robots",correct:false}]},
+
+{question:"Who wrote 'It'?",answers:[
+{text:"Stephen King",correct:true},
+{text:"Dean Koontz",correct:false},
+{text:"Clive Barker",correct:false},
+{text:"Shirley Jackson",correct:false}]},
+
+{question:"What form does Pennywise take?",answers:[
+{text:"Clown",correct:true},
+{text:"Ghost",correct:false},
+{text:"Shadow",correct:false},
+{text:"Doll",correct:false}]},
+
+{question:"Who wrote 'The Book Thief'?",answers:[
+{text:"Markus Zusak",correct:true},
+{text:"John Boyne",correct:false},
+{text:"Lois Lowry",correct:false},
+{text:"Ruta Sepetys",correct:false}]},
+
+{question:"Who narrates 'The Book Thief'?",answers:[
+{text:"Death",correct:true},
+{text:"Liesel",correct:false},
+{text:"Hans",correct:false},
+{text:"Max",correct:false}]},
+
+{question:"Who wrote 'The Giver'?",answers:[
+{text:"Lois Lowry",correct:true},
+{text:"Margaret Atwood",correct:false},
+{text:"George Orwell",correct:false},
+{text:"Ayn Rand",correct:false}]},
+
+{question:"What is Jonas’s role?",answers:[
+{text:"Receiver of Memory",correct:true},
+{text:"Leader",correct:false},
+{text:"Guardian",correct:false},
+{text:"Teacher",correct:false}]},
+
+{question:"Who wrote 'A Game of Thrones'?",answers:[
+{text:"J.R.R. Tolkien",correct:false},
+{text:"George R.R. Martin",correct:true},
+{text:"Robin Hobb",correct:false},
+{text:"Patrick Rothfuss",correct:false}]},
+
+{question:"What is Jon Snow’s direwolf named?",answers:[
+{text:"Ghost",correct:true},
+{text:"Nymeria",correct:false},
+{text:"Summer",correct:false},
+{text:"Shaggydog",correct:false}]},
+
+{question:"Who wrote 'The Alchemist'?",answers:[
+{text:"Paulo Coelho",correct:true},
+{text:"Gabriel Garcia Marquez",correct:false},
+{text:"Isabel Allende",correct:false},
+{text:"Jorge Luis Borges",correct:false}]},
+
+{question:"What is Santiago searching for?",answers:[
+{text:"Gold treasure",correct:true},
+{text:"A person",correct:false},
+{text:"A book",correct:false},
+{text:"A city",correct:false}]},
+
+{question:"Who wrote 'Life of Pi'?",answers:[
+{text:"Yann Martel",correct:true},
+{text:"Salman Rushdie",correct:false},
+{text:"Arundhati Roy",correct:false},
+{text:"Kazuo Ishiguro",correct:false}]},
+
+{question:"What animal is with Pi?",answers:[
+{text:"Tiger",correct:true},
+{text:"Lion",correct:false},
+{text:"Bear",correct:false},
+{text:"Wolf",correct:false}]},
+
+{question:"Who wrote 'The Shining'?",answers:[
+{text:"Stephen King",correct:true},
+{text:"Dean Koontz",correct:false},
+{text:"Clive Barker",correct:false},
+{text:"Joe Hill",correct:false}]},
+
+{question:"What ability does Danny have?",answers:[
+{text:"The Shining",correct:true},
+{text:"Telepathy only",correct:false},
+{text:"Invisibility",correct:false},
+{text:"Time travel",correct:false}]},
+
+{question:"Who wrote 'Coraline'?",answers:[
+{text:"Neil Gaiman",correct:true},
+{text:"Tim Burton",correct:false},
+{text:"Roald Dahl",correct:false},
+{text:"Lemony Snicket",correct:false}]},
+
+{question:"Who wrote 'Animal Farm'?",answers:[
+{text:"George Orwell",correct:true},
+{text:"Aldous Huxley",correct:false},
+{text:"Ray Bradbury",correct:false},
+{text:"Mark Twain",correct:false}]},
+
+{question:"Which character is NOT in 'Harry Potter'?",answers:[
+{text:"Luna Lovegood",correct:false},
+{text:"Draco Malfoy",correct:false},
+{text:"Percy Jackson",correct:true},
+{text:"Severus Snape",correct:false}]},
+
+{question:"What is the real name of Mark Twain?",answers:[
+{text:"Samuel Clemens",correct:true},
+{text:"John Smith",correct:false},
+{text:"Henry James",correct:false},
+{text:"Charles Dickens",correct:false}]},
+
+{question:"Which book starts with 'Call me Ishmael'?",answers:[
+{text:"Moby-Dick",correct:true},
+{text:"The Old Man and the Sea",correct:false},
+{text:"Treasure Island",correct:false},
+{text:"Life of Pi",correct:false}]},
+
+{question:"Who wrote 'Dracula'?",answers:[
+{text:"Mary Shelley",correct:false},
+{text:"Bram Stoker",correct:true},
+{text:"Edgar Allan Poe",correct:false},
+{text:"H.G. Wells",correct:false}]},
+
+{question:"Which character dies at the end of 'Romeo and Juliet'?",answers:[
+{text:"Romeo only",correct:false},
+{text:"Juliet only",correct:false},
+{text:"Both",correct:true},
+{text:"Neither",correct:false}]},
+
+{question:"What is NOT one of the Hogwarts houses?",answers:[
+{text:"Gryffindor",correct:false},
+{text:"Thunderbird",correct:true},
+{text:"Ravenclaw",correct:false},
+{text:"Hufflepuff",correct:false}]},
+
+{question:"Who wrote 'The Odyssey'?",answers:[
+{text:"Homer",correct:true},
+{text:"Virgil",correct:false},
+{text:"Sophocles",correct:false},
+{text:"Plato",correct:false}]},
+
+{question:"Which character is a detective?",answers:[
+{text:"Sherlock Holmes",correct:true},
+{text:"Dracula",correct:false},
+{text:"Frodo",correct:false},
+{text:"Gatsby",correct:false}]},
+
+{question:"What color is the White Rabbit in 'Alice in Wonderland'?",answers:[
+{text:"White",correct:true},
+{text:"Gray",correct:false},
+{text:"Brown",correct:false},
+{text:"Black",correct:false}]},
+
+{question:"Who wrote 'The Picture of Dorian Gray'?",answers:[
+{text:"Oscar Wilde",correct:true},
+{text:"Charles Dickens",correct:false},
+{text:"Leo Tolstoy",correct:false},
+{text:"Victor Hugo",correct:false}]},
+
+{question:"Which character says 'Big Brother is watching you'?",answers:[
+{text:"Winston Smith",correct:true},
+{text:"Guy Montag",correct:false},
+{text:"Holden Caulfield",correct:false},
+{text:"Atticus Finch",correct:false}]},
+
+{question:"What is the name of the hobbit who finds the One Ring?",answers:[
+{text:"Frodo",correct:false},
+{text:"Bilbo",correct:true},
+{text:"Sam",correct:false},
+{text:"Merry",correct:false}]},
+
+{question:"Which book features a fireman who burns books?",answers:[
+{text:"Fahrenheit 451",correct:true},
+{text:"1984",correct:false},
+{text:"Brave New World",correct:false},
+{text:"The Road",correct:false}]},
+
+{question:"Who wrote 'Les Misérables'?",answers:[
+{text:"Victor Hugo",correct:true},
+{text:"Alexandre Dumas",correct:false},
+{text:"Émile Zola",correct:false},
+{text:"Gustave Flaubert",correct:false}]},
+
+{question:"Which character is NOT a Disney princess but is from a book?",answers:[
+{text:"Belle",correct:false},
+{text:"Cinderella",correct:false},
+{text:"Hermione Granger",correct:true},
+{text:"Aurora",correct:false}]},
+
+{question:"What is the name of Don Quixote’s horse?",answers:[
+{text:"Rocinante",correct:true},
+{text:"Pegasus",correct:false},
+{text:"Shadowfax",correct:false},
+{text:"Bucephalus",correct:false}]},
+
+{question:"Who wrote 'The Road'?",answers:[
+{text:"Cormac McCarthy",correct:true},
+{text:"Stephen King",correct:false},
+{text:"John Steinbeck",correct:false},
+{text:"Ernest Hemingway",correct:false}]},
+
+{question:"Which Shakespeare play features witches?",answers:[
+{text:"Macbeth",correct:true},
+{text:"Hamlet",correct:false},
+{text:"Othello",correct:false},
+{text:"King Lear",correct:false}]},
+
+{question:"What is the name of the pig in 'Charlotte’s Web'?",answers:[
+{text:"Wilbur",correct:true},
+{text:"Babe",correct:false},
+{text:"Napoleon",correct:false},
+{text:"Snowball",correct:false}]},
+
+{question:"Which book has the character Atticus Finch?",answers:[
+{text:"To Kill a Mockingbird",correct:true},
+{text:"The Great Gatsby",correct:false},
+{text:"Of Mice and Men",correct:false},
+{text:"The Catcher in the Rye",correct:false}]},
+
+{question:"Who wrote 'The Handmaid’s Tale'?",answers:[
+{text:"Margaret Atwood",correct:true},
+{text:"Toni Morrison",correct:false},
+{text:"Ursula Le Guin",correct:false},
+{text:"Octavia Butler",correct:false}]},
+
+{question:"Which character is obsessed with a green light?",answers:[
+{text:"Jay Gatsby",correct:true},
+{text:"Nick Carraway",correct:false},
+{text:"Tom Buchanan",correct:false},
+{text:"Daisy",correct:false}]},
+
+{question:"What is the name of the school in 'Dead Poets Society' (novelization)?",answers:[
+{text:"Welton Academy",correct:true},
+{text:"Eton College",correct:false},
+{text:"Hogwarts",correct:false},
+{text:"Xavier’s School",correct:false}]},
+
+{question:"Who wrote 'The Bell Jar'?",answers:[
+{text:"Sylvia Plath",correct:true},
+{text:"Virginia Woolf",correct:false},
+{text:"Emily Dickinson",correct:false},
+{text:"Jane Austen",correct:false}]},
+
+{question:"Which character travels with a panther named Bagheera?",answers:[
+{text:"Mowgli",correct:true},
+{text:"Tarzan",correct:false},
+{text:"Simba",correct:false},
+{text:"Aladdin",correct:false}]},
+
+{question:"What is NOT a Jane Austen novel?",answers:[
+{text:"Emma",correct:false},
+{text:"Persuasion",correct:false},
+{text:"Middlemarch",correct:true},
+{text:"Sense and Sensibility",correct:false}]},
+
+{question:"Who wrote 'War and Peace'?",answers:[
+{text:"Leo Tolstoy",correct:true},
+{text:"Fyodor Dostoevsky",correct:false},
+{text:"Anton Chekhov",correct:false},
+{text:"Nikolai Gogol",correct:false}]},
+
+{question:"Which character has a pet owl named Hedwig?",answers:[
+{text:"Harry Potter",correct:true},
+{text:"Ron Weasley",correct:false},
+{text:"Draco Malfoy",correct:false},
+{text:"Neville Longbottom",correct:false}]},
+
+{question:"What is the name of the island in 'Lord of the Flies'?",answers:[
+{text:"No name given",correct:true},
+{text:"Skull Island",correct:false},
+{text:"Treasure Island",correct:false},
+{text:"Coral Island",correct:false}]},
+
+{question:"Who wrote 'The Kite Runner'?",answers:[
+{text:"Khaled Hosseini",correct:true},
+{text:"Arundhati Roy",correct:false},
+{text:"Jhumpa Lahiri",correct:false},
+{text:"Salman Rushdie",correct:false}]},
+
+{question:"Which character says 'I volunteer as tribute'?",answers:[
+{text:"Katniss Everdeen",correct:true},
+{text:"Peeta Mellark",correct:false},
+{text:"Prim Everdeen",correct:false},
+{text:"Gale",correct:false}]},
+
+{question:"What is the real name of the Beast in 'Beauty and the Beast' (original tale)?",answers:[
+{text:"Never given",correct:true},
+{text:"Adam",correct:false},
+{text:"Louis",correct:false},
+{text:"Henri",correct:false}]},
+
+{question:"Who wrote 'The Secret Garden'?",answers:[
+{text:"Frances Hodgson Burnett",correct:true},
+{text:"Louisa May Alcott",correct:false},
+{text:"L.M. Montgomery",correct:false},
+{text:"Beatrix Potter",correct:false}]},
+
+{question:"Which character turns into a giant insect?",answers:[
+{text:"Gregor Samsa",correct:true},
+{text:"Raskolnikov",correct:false},
+{text:"Ivan",correct:false},
+{text:"Meursault",correct:false}]},
+
+{question:"Who wrote 'Of Mice and Men'?",answers:[
+{text:"John Steinbeck",correct:true},
+{text:"Ernest Hemingway",correct:false},
+{text:"F. Scott Fitzgerald",correct:false},
+{text:"William Faulkner",correct:false}]},
+
+{question:"Which character loves Big Brother?",answers:[
+{text:"Winston Smith",correct:false},
+{text:"Julia",correct:false},
+{text:"O’Brien",correct:false},
+{text:"No one sincerely",correct:true}]},
+
+{question:"What is the name of the dragon in 'Beowulf'?",answers:[
+{text:"No specific name",correct:true},
+{text:"Smaug",correct:false},
+{text:"Fafnir",correct:false},
+{text:"Grendel",correct:false}]},
+
+{question:"Who wrote 'The Color Purple'?",answers:[
+{text:"Alice Walker",correct:true},
+{text:"Toni Morrison",correct:false},
+{text:"Zora Neale Hurston",correct:false},
+{text:"Maya Angelou",correct:false}]},
+
+{question:"Which character says 'So it goes'?",answers:[
+{text:"Narrator of Slaughterhouse-Five",correct:true},
+{text:"Holden Caulfield",correct:false},
+{text:"Winston Smith",correct:false},
+{text:"Gatsby",correct:false}]},
+
+{question:"Who wrote 'Slaughterhouse-Five'?",answers:[
+{text:"Kurt Vonnegut",correct:true},
+{text:"Joseph Heller",correct:false},
+{text:"George Orwell",correct:false},
+{text:"Ray Bradbury",correct:false}]},
+
+{question:"Which character is known as the 'Boy Who Lived'?",answers:[
+{text:"Harry Potter",correct:true},
+{text:"Neville Longbottom",correct:false},
+{text:"Tom Riddle",correct:false},
+{text:"Draco Malfoy",correct:false}]},
+
+{question:"What is the profession of Dr. Jekyll?",answers:[
+{text:"Scientist/Doctor",correct:true},
+{text:"Lawyer",correct:false},
+{text:"Teacher",correct:false},
+{text:"Detective",correct:false}]},
+
+{question:"Who wrote 'Jane Eyre'?",answers:[
+{text:"Charlotte Brontë",correct:true},
+{text:"Emily Brontë",correct:false},
+{text:"Anne Brontë",correct:false},
+{text:"Jane Austen",correct:false}]},
+
+{question:"Which character hears a heartbeat under the floor?",answers:[
+{text:"Narrator of The Tell-Tale Heart",correct:true},
+{text:"Roderick Usher",correct:false},
+{text:"Montresor",correct:false},
+{text:"Lenore",correct:false}]},
+
+{question:"Who wrote 'The Scarlet Letter'?",answers:[
+{text:"Nathaniel Hawthorne",correct:true},
+{text:"Herman Melville",correct:false},
+{text:"Edgar Allan Poe",correct:false},
+{text:"Washington Irving",correct:false}]},
+
+{question:"Which character has a scarlet letter 'A'?",answers:[
+{text:"Hester Prynne",correct:true},
+{text:"Abigail Williams",correct:false},
+{text:"Elizabeth Proctor",correct:false},
+{text:"Daisy Buchanan",correct:false}]},
+
+{question:"Who wrote 'Brave New World'?",answers:[
+{text:"Aldous Huxley",correct:true},
+{text:"George Orwell",correct:false},
+{text:"Ray Bradbury",correct:false},
+{text:"H.G. Wells",correct:false}]},
+
+{question:"Which character is called the 'Savage'?",answers:[
+{text:"John",correct:true},
+{text:"Bernard",correct:false},
+{text:"Helmholtz",correct:false},
+{text:"Mustapha Mond",correct:false}]},
+
+{question:"Who wrote 'Wuthering Heights'?",answers:[
+{text:"Emily Brontë",correct:true},
+{text:"Charlotte Brontë",correct:false},
+{text:"Anne Brontë",correct:false},
+{text:"Jane Austen",correct:false}]},
+
+{question:"Which character is obsessed with revenge in 'Wuthering Heights'?",answers:[
+{text:"Heathcliff",correct:true},
+{text:"Edgar",correct:false},
+{text:"Lockwood",correct:false},
+{text:"Hareton",correct:false}]},
+
+{question:"Who wrote 'The Sun Also Rises'?",answers:[
+{text:"Ernest Hemingway",correct:true},
+{text:"F. Scott Fitzgerald",correct:false},
+{text:"John Steinbeck",correct:false},
+{text:"William Faulkner",correct:false}]},
+
+{question:"Which character says 'All animals are equal'?",answers:[
+{text:"Napoleon",correct:false},
+{text:"Snowball",correct:false},
+{text:"Squealer",correct:false},
+{text:"Originally the commandment",correct:true}]},
+
+{question:"Who wrote 'The Grapes of Wrath'?",answers:[
+{text:"John Steinbeck",correct:true},
+{text:"Ernest Hemingway",correct:false},
+{text:"Mark Twain",correct:false},
+{text:"William Faulkner",correct:false}]},
+
+{question:"Which family is central in 'The Grapes of Wrath'?",answers:[
+{text:"Joad family",correct:true},
+{text:"Finch family",correct:false},
+{text:"Bennet family",correct:false},
+{text:"March family",correct:false}]},
+
+{question:"Who wrote 'Little Women'?",answers:[
+{text:"Louisa May Alcott",correct:true},
+{text:"Jane Austen",correct:false},
+{text:"Emily Brontë",correct:false},
+{text:"Harriet Beecher Stowe",correct:false}]},
+
+{question:"Which sister is the writer in 'Little Women'?",answers:[
+{text:"Jo",correct:true},
+{text:"Meg",correct:false},
+{text:"Beth",correct:false},
+{text:"Amy",correct:false}]},
+
+{question:"Who wrote 'Crime and Punishment'?",answers:[
+{text:"Fyodor Dostoevsky",correct:true},
+{text:"Leo Tolstoy",correct:false},
+{text:"Anton Chekhov",correct:false},
+{text:"Nikolai Gogol",correct:false}]},
+
+{question:"Which character commits murder in 'Crime and Punishment'?",answers:[
+{text:"Raskolnikov",correct:true},
+{text:"Ivan",correct:false},
+{text:"Alyosha",correct:false},
+{text:"Dmitri",correct:false}]},
+
+{question:"Who wrote 'The Old Man and the Sea'?",answers:[
+{text:"Ernest Hemingway",correct:true},
+{text:"John Steinbeck",correct:false},
+{text:"William Faulkner",correct:false},
+{text:"Fitzgerald",correct:false}]},
+
+{question:"What does the old man catch?",answers:[
+{text:"Marlin",correct:true},
+{text:"Shark",correct:false},
+{text:"Tuna",correct:false},
+{text:"Nothing",correct:false}]},
+
+{question:"Who wrote 'Fahrenheit 451'?",answers:[
+{text:"Ray Bradbury",correct:true},
+{text:"George Orwell",correct:false},
+{text:"Aldous Huxley",correct:false},
+{text:"Kurt Vonnegut",correct:false}]},
+
+{question:"Which character is Montag’s wife?",answers:[
+{text:"Mildred",correct:true},
+{text:"Clarisse",correct:false},
+{text:"Eleanor",correct:false},
+{text:"Julia",correct:false}]},
+
+{question:"Who wrote 'The Metamorphosis'?",answers:[
+{text:"Franz Kafka",correct:true},
+{text:"Albert Camus",correct:false},
+{text:"Jean-Paul Sartre",correct:false},
+{text:"Hermann Hesse",correct:false}]},
+
+{question:"What does Gregor turn into?",answers:[
+{text:"Insect",correct:true},
+{text:"Bird",correct:false},
+{text:"Rat",correct:false},
+{text:"Monster",correct:false}]},
+
+{question:"Who is the villain in 'Coraline'?",answers:[
+{text:"Other Mother",correct:true},
+{text:"Cat",correct:false},
+{text:"Father",correct:false},
+{text:"Neighbor",correct:false}]},
+
+{question:"Who wrote 'The Outsiders'?",answers:[
+{text:"S.E. Hinton",correct:true},
+{text:"John Steinbeck",correct:false},
+{text:"Harper Lee",correct:false},
+{text:"J.D. Salinger",correct:false}]},
+
+{question:"Who are the Greasers’ rivals?",answers:[
+{text:"Socs",correct:true},
+{text:"Jets",correct:false},
+{text:"Sharks",correct:false},
+{text:"Tigers",correct:false}]},
+
+{question:"Who wrote 'Ready Player One'?",answers:[
+{text:"Ernest Cline",correct:true},
+{text:"Andy Weir",correct:false},
+{text:"Neal Stephenson",correct:false},
+{text:"William Gibson",correct:false}]},
+
+{question:"What is the OASIS?",answers:[
+{text:"Virtual world",correct:true},
+{text:"City",correct:false},
+{text:"Company",correct:false},
+{text:"Weapon",correct:false}]},
+
+{question:"What is fan casting?",answers:[
+{text:"Writing",correct:false},
+{text:"Imagining actors",correct:true},
+{text:"Editing",correct:false},
+{text:"Reviewing",correct:false}]},
+
+{question:"What is a love triangle?",answers:[
+{text:"Three friends",correct:false},
+{text:"Three villains",correct:false},
+{text:"A group of heroes",correct:false},
+{text:"One person, two love interests",correct:true}]},
+
+{question:"What is a subplot?",answers:[
+{text:"Main plot",correct:false},
+{text:"Side storyline",correct:true},
+{text:"Ending",correct:false},
+{text:"Setting",correct:false}]},
+
+{question:"What is a glossary?",answers:[
+{text:"Character list",correct:false},
+{text:"Definitions",correct:true},
+{text:"Summary",correct:false},
+{text:"Plot",correct:false}]},
+
+{question:"What is a plot hole?",answers:[
+{text:"Twist",correct:false},
+{text:"Inconsistency",correct:true},
+{text:"Character",correct:false},
+{text:"Genre",correct:false}]},
+
+{question:"What is a trigger warning?",answers:[
+{text:"Plot twist",correct:false},
+{text:"Ending",correct:false},
+{text:"Genre",correct:false},
+{text:"Warning",correct:true}]},
+
+{question:"What is the spice level?",answers:[
+{text:"Genre",correct:false},
+{text:"Theme",correct:false},
+{text:"Explicit content level",correct:true},
+{text:"Setting",correct:false}]},
+
+{question:"What is a redemption arc?",answers:[
+{text:"Character improves",correct:true},
+{text:"Character gets worse",correct:false},
+{text:"Plot twist",correct:false},
+{text:"No change",correct:false}]},
+
+{question:"What is angst in books?",answers:[
+{text:"Humor",correct:false},
+{text:"Action",correct:false},
+{text:"Awkwardness",correct:false},
+{text:"Tension",correct:false}]},
+
+{question:"What is a morally gray character?",answers:[
+{text:"Evil",correct:false},
+{text:"Good",correct:false},
+{text:"Not important",correct:false},
+{text:"Mix of good and bad",correct:true}]},
+
+{question:"What trope involves pretending to date?",answers:[
+{text:"Forbidden love",correct:false},
+{text:"Enemies to lovers",correct:false},
+{text:"Fake dating",correct:true},
+{text:"Love triangle",correct:false}]},
+
+{question:"What is grumpy vs sunshine?",answers:[
+{text:"One grumpy, one cheerful",correct:true},
+{text:"Two angry",correct:false},
+{text:"Two happy",correct:false},
+{text:"No romance",correct:false}]},
+
+{question:"What is a trilogy?",answers:[
+{text:"2 books",correct:false},
+{text:"3 books",correct:true},
+{text:"4 books",correct:false},
+{text:"5 books",correct:false}]},
+
+{question:"What is BookTok?",answers:[
+{text:"A publishing company",correct:false},
+{text:"A section of TikTok focused on books",correct:true},
+{text:"Bookstore chain",correct:false},
+{text:"Reading device",correct:false}]},
+
+{question:"What trope features two characters who start off disliking each other but fall in love?",answers:[
+{text:"Enemies to lovers",correct:true},
+{text:"Fake dating",correct:false},
+{text:"Second chance",correct:false},
+{text:"Friends to lovers",correct:false}]},
+
+{question:"What does spicy mean in book terms?",answers:[
+{text:"Funny",correct:false},
+{text:"Emotional",correct:false},
+{text:"Explicit",correct:true},
+{text:"Violent",correct:false}]},
+
+{question:"What is a hook?",answers:[
+{text:"Ending",correct:false},
+{text:"Attention-grabbing start",correct:true},
+{text:"Plot twist",correct:false},
+{text:"Dialogue",correct:false}]},
+
+{question:"What is spice level?",answers:[
+{text:"Violence",correct:false},
+{text:"Romance intensity",correct:true},
+{text:"Length",correct:false},
+{text:"Genre",correct:false}]},
+
+{question:"What is a trope?",answers:[
+{text:"Common story pattern",correct:true},
+{text:"Writing mistake",correct:false},
+{text:"Character flaw",correct:false},
+{text:"Setting",correct:false}]},
+
+{question:"What is a villain called?",answers:[
+{text:"Hero",correct:false},
+{text:"Antagonist",correct:true},
+{text:"Sidekick",correct:false},
+{text:"Lead",correct:false}]}
+];
+
+// Shuffle
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+let selectedQuestions = [];
+
+function generateQuiz() {
+  let form = document.getElementById("quizForm");
+  form.innerHTML = "";
+
+let shuffled = [...questionBank];
+shuffle(shuffled);
+selectedQuestions = shuffled.slice(0, 10);
+
+  selectedQuestions.forEach((q, index) => {
+    let div = document.createElement("div");
+    div.classList.add("question");
+
+    let html = `<p><b>Q${index + 1}:</b> ${q.question}</p>`;
+    html += `<div class="answers">`;
+
+    q.answers.forEach((a, i) => {
+  html += `
+    <label>
+      <input type="radio" name="q${index}" value="${i}">
+      ${a.text}
+    </label>
+  `;
+});
+
+    html += `</div>`;
+
+    div.innerHTML = html;
+    form.appendChild(div);
+  });
+}
+function submitQuiz() {
+  let score = 0;
+  let reviewHTML = "";
+
+  selectedQuestions.forEach((q, index) => {
+    let selected = document.querySelector(`input[name="q${index}"]:checked`);
+
+    let correctAnswer = q.answers.find(a => a.correct);
+    let correctText = correctAnswer.text;
+
+    if (selected) {
+      let userAnswer = q.answers[selected.value];
+
+      if (userAnswer.correct) {
+        score++;
+      } else {
+        reviewHTML += `
+          <p style="color:#ff4d4d;">
+            ❌ <b>${q.question}</b><br>
+            Your answer: ${userAnswer.text}<br>
+            ✅ Correct answer: ${correctText}
+          </p>
+        `;
+      }
+    } else {
+      reviewHTML += `
+        <p style="color:#ffcc00;">
+          ⚠️ <b>${q.question}</b><br>
+          You didn’t answer this.<br>
+          ✅ Correct answer: ${correctText}
+        </p>
+      `;
+    }
+  });
+
+  let result = "";
+
+  if (score <= 3) result = "📖 Beginner Reader";
+  else if (score <= 6) result = "📚 Casual Bookworm";
+  else if (score <= 8) result = "🔥 Avid Reader";
+  else result = "👑 Bookish Expert";
+
+  let finalText = `
+    👤 ${userName}<br><br>
+    You got ${score}/10 correct!<br><br>
+    ${result}
+    <hr>
+    <h3>Review:</h3>
+    ${reviewHTML || "Perfect score! 🔥"}
+  `;
+
+  document.getElementById("popupResult").innerHTML = finalText;
+  document.getElementById("popupOverlay").style.display = "flex";
+
+  document.querySelector(".container").classList.add("blur");
+  document.querySelector("h1").classList.add("blur");
+}
+
+/* Generate petals */
+function createEmbers() {
+  const container = document.getElementById("embers");
+
+  for (let i = 0; i < 40; i++) {
+    let ember = document.createElement("div");
+    ember.classList.add("ember");
+
+    ember.style.left = Math.random() * 100 + "vw";
+    ember.style.animationDuration = (8 + Math.random() * 12) + "s"; // slower fall
+    ember.style.opacity = Math.random();
+
+    container.appendChild(ember);
+  }
+}
+
+function getWeekNumberThursday() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const day = now.getDay(); // 0 = Sunday, 4 = Thursday
+
+  // Shift so Thursday becomes the "start"
+  const diff = (day - 4 + 7) % 7;
+
+  const thursday = new Date(now);
+  thursday.setDate(now.getDate() - diff);
+
+  const anchor = new Date(2024, 0, 4); // a known Thursday
+
+  const weekNumber = Math.floor(
+    (thursday - anchor) / (7 * 24 * 60 * 60 * 1000)
+  );
+
+  return weekNumber;
+}
+generateQuiz();
+createEmbers();
+
+</script>
+
+</body>
+</html>

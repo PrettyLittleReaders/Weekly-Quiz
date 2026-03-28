@@ -32,8 +32,8 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 120%;
+  height: 120%;
   background: rgba(0,0,0,0.9);
   display: flex;
   justify-content: center;
@@ -41,16 +41,10 @@ body {
   z-index: 9999;
 }
 
-#nameBox, #popupBox {
-  background: #1a0000;
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 0 25px rgba(255,0,0,0.7);
-
-  width: 90%;
+#popupBox, #nameBox {
+  width: 120%;
   max-width: 500px;
-
+  padding: 25px;
   font-size: clamp(16px, 4.5vw, 20px);
 }
 
@@ -111,16 +105,10 @@ body::before {
 }
 
 /* Modal box */
-#nameBox, #popupBox {
-  background: #1a0000;
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 0 25px rgba(255,0,0,0.7);
-
-  width: 90%;
+#popupBox, #nameBox {
+  width: 120%;
   max-width: 500px;
-
+  padding: 25px;
   font-size: clamp(16px, 4.5vw, 20px);
 }
 
